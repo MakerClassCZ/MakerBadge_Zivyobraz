@@ -22,13 +22,18 @@ mac_addr = ":".join([f"{i:02x}" for i in wifi.radio.mac_address])
 battery_voltage = get_battery()
 print("Battery voltage: ", battery_voltage)
 
-URL = f"http://cdn.zivyobraz.eu/index.php?mac={mac_addr}&timestamp_check=1&rssi={rssi}&v={battery_voltage}&x=250&y=122&c=BW&fw=1"
+URL = f"http://cdn.zivyobraz.eu/index.php?mac={mac_addr}&timestamp_check=1&rssi={rssi}&v={battery_voltage}&x={display.width}&y={display.height}&c=BW&fw=1"
 
 def parse_bmp(bmp_data):
 
     if bmp_data[:2] != b'BM':
         print(bmp_data[:50])
-        return displayio.Bitmap(1, 1, 1)
+        # temporary fix
+        if bmp_data[:4] == b'Nepl':
+            print("Fix invalid BMP header")
+            bmp_data = bmp_data[12:]            
+        else:
+            return displayio.Bitmap(1, 1, 1)
 
     image_offset = int.from_bytes(bmp_data[10:14], 'little')
     
