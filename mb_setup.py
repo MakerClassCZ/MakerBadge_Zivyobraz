@@ -1,13 +1,8 @@
 import board
 import time
-import neopixel
-import touchio
 import displayio
 import adafruit_ssd1680
 from digitalio import DigitalInOut, Direction
-from adafruit_debouncer import Debouncer
-from adafruit_display_text import bitmap_label
-import adafruit_miniqr
 import analogio
 
 
@@ -21,7 +16,32 @@ colors = {
         'yellow': 0xFFFF00,
 }
 
-def setup():
+def setup(touch_enable = True, led_enable = True, qr_enable = True, label_enable = True):
+
+    if qr_enable:
+        import adafruit_miniqr
+    
+    if label_enable:
+        from adafruit_display_text import bitmap_label
+
+    touch = []
+    if touch_enable:
+        from adafruit_debouncer import Debouncer
+        import touchio
+
+        # Define touch buttons
+        touch_threshold = 20000
+        for pin in [board.D5,board.D4,board.D3,board.D2,board.D1]:
+            tmp = touchio.TouchIn(pin)
+            tmp.threshold = touch_threshold
+            touch.append(Debouncer(tmp))
+
+
+    led_matrix = None
+    if led_enable:
+        import neopixel
+        led_matrix = neopixel.NeoPixel(board.D18, 4, brightness = 0.1, auto_write = False)
+
 
     # Define board pinout
     board_spi = board.SPI()  # Uses SCK and MOSI
@@ -32,21 +52,6 @@ def setup():
     enable_display = DigitalInOut(board.D16)
     enable_display.direction = Direction.OUTPUT
     enable_display.value = False
-
-
-
-
-    # Define touch buttons
-    touch_threshold = 20000
-    touch = []
-    for pin in [board.D5,board.D4,board.D3,board.D2,board.D1]:
-        tmp = touchio.TouchIn(pin)
-        tmp.threshold = touch_threshold
-        touch.append(Debouncer(tmp))
-
-    led_matrix = neopixel.NeoPixel(board.D18, 4, brightness = 0.1, auto_write = False)
-
-
 
     # Define ePaper display resolution
     display_width = 250

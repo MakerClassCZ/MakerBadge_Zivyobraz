@@ -1,15 +1,14 @@
-
+from mb_setup import setup, get_battery
+import adafruit_requests
 import displayio
 import wifi
 import socketpool
-import adafruit_requests
 import os
 import time
-from mb_setup import setup, get_battery
 import alarm
 import microcontroller
 
-(display, touch, led_matrix, colors) = setup()
+(display, touch, led_matrix, colors) = setup(touch_enable=False, led_enable=False, qr_enable=False, label_enable=False)
 
 # Connect to WiFi
 wifi.radio.connect(os.getenv('CIRCUITPY_WIFI_SSID'), os.getenv('CIRCUITPY_WIFI_PASSWORD'))
@@ -89,8 +88,8 @@ if timestamp != timestamp_old:
 
     bitmap = parse_bmp(resp.content)
     palette = displayio.Palette(2)
-    palette[0] = 0x000000
-    palette[1] = 0xFFFFFF
+    palette[0] = colors['black']
+    palette[1] = colors['white']
 
     tile_grid = displayio.TileGrid(bitmap, pixel_shader=palette)
     group = displayio.Group()
