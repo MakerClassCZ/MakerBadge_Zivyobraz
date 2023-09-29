@@ -104,6 +104,8 @@ if timestamp != timestamp_old:
     bytes_timestamp = timestamp.to_bytes(4, 'little')
     microcontroller.nvm[0:4] = bytes_timestamp
 
+else:
+    print("No new image - doesn't refresh display")
 
     
 time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() + sleep_time)
