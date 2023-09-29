@@ -8,7 +8,7 @@ import time
 import alarm
 import microcontroller
 
-(display, touch, led_matrix, colors) = setup(touch_enable=False, led_enable=False, qr_enable=False, label_enable=False)
+(display, touch, led_matrix, colors) = setup(touch_enable=False, led_enable=False)
 
 # Connect to WiFi
 wifi.radio.connect(os.getenv('CIRCUITPY_WIFI_SSID'), os.getenv('CIRCUITPY_WIFI_PASSWORD'))

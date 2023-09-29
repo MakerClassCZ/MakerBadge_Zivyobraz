@@ -4,7 +4,7 @@ import displayio
 import adafruit_ssd1680
 from digitalio import DigitalInOut, Direction
 import analogio
-
+from adafruit_display_text import bitmap_label
 
 
 colors = {
@@ -16,13 +16,8 @@ colors = {
         'yellow': 0xFFFF00,
 }
 
-def setup(touch_enable = True, led_enable = True, qr_enable = True, label_enable = True):
+def setup(time_to_refresh = 180, touch_enable = True, led_enable = True):
 
-    if qr_enable:
-        import adafruit_miniqr
-    
-    if label_enable:
-        from adafruit_display_text import bitmap_label
 
     touch = []
     if touch_enable:
@@ -67,7 +62,7 @@ def setup(touch_enable = True, led_enable = True, qr_enable = True, label_enable
     time.sleep(1)
 
     display = adafruit_ssd1680.SSD1680(
-        display_bus, width = display_width, height = display_height, rotation = 270, busy_pin = board_epd_busy
+        display_bus, width = display_width, height = display_height, rotation = 270, busy_pin = board_epd_busy, seconds_per_frame = time_to_refresh
     )
     
 
@@ -83,6 +78,7 @@ def get_battery():
     return bat_value
 
 def qr_gen(data):
+    import adafruit_miniqr
     qrcode = adafruit_miniqr.QRCode(qr_type=1)
     qrcode.add_data(data)
     qrcode.make()
@@ -102,7 +98,6 @@ def qr_gen(data):
 
 
 def text_gen(text, x, y, font, scale = 1, color = colors['black']):
-
     label = bitmap_label.Label(font, text = text, color = color, scale = scale)
     label.x = x
     label.y = y
