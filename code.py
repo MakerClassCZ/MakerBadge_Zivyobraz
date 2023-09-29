@@ -65,8 +65,12 @@ print("zivyobraz URL:", URL)
 resp = requests.get(URL)
 
 # Get headers
-sleep_time = int(resp.headers['sleep'])*60
-timestamp = int(resp.headers['timestamp'])
+try:
+    sleep_time = int(resp.headers['sleep'])*60
+    timestamp = int(resp.headers['timestamp'])
+except:
+    sleep_time = 60*60
+    timestamp = 0
 
 # Get previous timestamp from NVM
 bytes_timestamp = microcontroller.nvm[0:4]
