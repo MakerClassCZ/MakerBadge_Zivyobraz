@@ -13,10 +13,11 @@ import microcontroller
 # Connect to WiFi
 wifi.radio.connect(os.getenv('CIRCUITPY_WIFI_SSID'), os.getenv('CIRCUITPY_WIFI_PASSWORD'))
 
-print("Conencted:", wifi.radio.ap_info.ssid)
+print("Connected:", wifi.radio.ap_info.ssid)
 
 rssi = wifi.radio.ap_info.rssi
 mac_addr = ":".join([f"{i:02x}" for i in wifi.radio.mac_address])
+print("MAC address: ", mac_addr)
 
 battery_voltage = get_battery()
 print("Battery voltage: ", battery_voltage)
