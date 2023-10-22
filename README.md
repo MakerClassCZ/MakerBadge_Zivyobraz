@@ -19,3 +19,6 @@ Práce s API, parsování BMP a zobrazování na E-Ink je v souboru *code.py*, v
 - CircuitPython: https://circuitpython.org/board/maker_badge/
 
 ![makerbadge-cpy-zivyobraz](https://github.com/MakerClassCZ/MakerBadge_Zivyobraz/assets/3875093/bcbf8335-c2c5-44a0-b281-e7ece09425dd)
+
+## Další ukázky s MakerBadge:
+- [Interaktivní visačka s QR vstupenkou](https://github.com/MakerClassCZ/Events/tree/main/2023-09-15-PyconCZ/badge)
