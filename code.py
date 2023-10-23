@@ -8,6 +8,9 @@ import time
 import alarm
 import microcontroller
 
+# zivyobraz API version
+version = "2.0"
+
 (display, touch, led_matrix, colors) = setup(touch_enable=False, led_enable=False)
 
 # Connect to WiFi
@@ -22,91 +25,79 @@ print("MAC address: ", mac_addr)
 battery_voltage = get_battery()
 print("Battery voltage: ", battery_voltage)
 
-URL = f"http://cdn.zivyobraz.eu/index.php?mac={mac_addr}&timestamp_check=1&rssi={rssi}&v={battery_voltage}&x={display.width}&y={display.height}&c=BW&fw=1"
+URL = f"http://cdn.zivyobraz.eu/index.php?mac={mac_addr}&timestamp_check=1&rssi={rssi}&v={battery_voltage}&x={display.width}&y={display.height}&c=BW&fw={version}"
 
-def parse_bmp(bmp_data):
-
-    if bmp_data[:2] != b'BM':
-        print(bmp_data[:50])
-        # temporary fix
-        if bmp_data[:4] == b'Nepl':
-            print("Fix invalid BMP header")
-            bmp_data = bmp_data[12:]            
-        else:
-            return displayio.Bitmap(1, 1, 1)
-
-    image_offset = int.from_bytes(bmp_data[10:14], 'little')
-    
-    width = int.from_bytes(bmp_data[18:22], 'little')
-    height = int.from_bytes(bmp_data[22:26], 'little')
-    
-    padding = (4 - ((width // 8) % 4)) % 4
-    
-    image_bitmap = displayio.Bitmap(width, height, 2)
-
-    data_pointer = image_offset
-    for y in range(height - 1, -1, -1):  # Start from the bottom row
-        for x in range(width // 8):  # 1 byte = 8 pixels
-            if data_pointer < len(bmp_data):
-                byte = bmp_data[data_pointer]
-                
-                mask = 0b10000000
-                for bit in range(8):
-                    j = y * width + x * 8 + bit
-                    if j < width * height:
-                        image_bitmap[j] = (byte & mask) >> (7 - bit)
-                    mask >>= 1
-
-                data_pointer += 1
-        data_pointer += padding
-
-    return image_bitmap
-
-  
 pool = socketpool.SocketPool(wifi.radio)
 requests = adafruit_requests.Session(pool)
 
 print("zivyobraz URL:", URL)
 resp = requests.get(URL)
 
-# Get headers
-try:
-    sleep_time = int(resp.headers['sleep'])*60
-    timestamp = int(resp.headers['timestamp'])
-except:
-    sleep_time = 60*60
-    timestamp = 0
+with requests.get(URL, stream=True) as resp:
 
-# Get previous timestamp from NVM
-bytes_timestamp = microcontroller.nvm[0:4]
-timestamp_old = int.from_bytes(bytes_timestamp, 'little')
+    # Get headers
+    try:
+        sleep_time = int(resp.headers['sleep'])*60
+        timestamp = int(resp.headers['timestamp'])
+    except:
+        sleep_time = 60*60
+        timestamp = 0
 
-print(sleep_time, timestamp, timestamp_old)
+    # Get previous timestamp from NVM
+    bytes_timestamp = microcontroller.nvm[0:4]
+    timestamp_old = int.from_bytes(bytes_timestamp, 'little')
 
-if timestamp != timestamp_old:
+    print(sleep_time, timestamp, timestamp_old)
 
-    print("New image available!")
+    if timestamp != timestamp_old:
 
-    bitmap = parse_bmp(resp.content)
-    palette = displayio.Palette(2)
-    palette[0] = colors['black']
-    palette[1] = colors['white']
+        print("New image available!")
+        
+        # Read header - image format
+        chunk_size = 2
+        chunk = b''
+        while len(chunk) < chunk_size:
+            chunk += resp.iter_content(chunk_size=chunk_size-len(chunk)).__next__()
+        
+        if chunk != b'Z2':
+            if chunk == b'BM':
+                print("For v1.0 BMP use old version")
+            elif chunk == b'Z1':
+                print("Z1 compression not supported yet")
+            else:
+                print("Unknown image format:", chunk)
+        
+        # Process image if it is Z2 RLE format    
+        else:
+            bitmap = displayio.Bitmap(display.width, display.height, 2)
+            palette = displayio.Palette(2)
+            palette[0] = colors['white']
+            palette[1] = colors['black']
 
-    tile_grid = displayio.TileGrid(bitmap, pixel_shader=palette)
-    group = displayio.Group()
-    group.append(tile_grid)
-    display.show(group)
-    display.refresh()
+            # position in bitmap
+            i = 0
+            for chunk in resp.iter_content(chunk_size=512):
+                for byte in chunk:
+                    count = byte & 0b00111111
+                    pixel_color = (byte & 0b11000000) >> 6
+                    for _ in range(count):
+                        bitmap[i] = pixel_color
+                        i += 1
 
-    while display.busy:
-        pass
+            tile_grid = displayio.TileGrid(bitmap, pixel_shader=palette)
+            group = displayio.Group()
+            group.append(tile_grid)
+            display.show(group)
+            display.refresh()
 
-    bytes_timestamp = timestamp.to_bytes(4, 'little')
-    microcontroller.nvm[0:4] = bytes_timestamp
+            while display.busy:
+                pass
 
-else:
-    print("No new image - doesn't refresh display")
+        bytes_timestamp = timestamp.to_bytes(4, 'little')
+        microcontroller.nvm[0:4] = bytes_timestamp
 
+    else:
+        print("No new image - doesn't refresh display")
     
 time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() + sleep_time)
 print(f"Good night for {sleep_time}s!")
