@@ -14,7 +14,7 @@ Pro ušetření zdrojů a opravy stavu, kdy mi služba vracela před samotnými 
 
 Pro novou verzi 2.0 je implementován RLE parser, který kontroluje, že hlavička vrácených dat je Z2 (https://wiki.zivyobraz.eu/doku.php?id=portal:format_z1_a_z2). Kód používá streamovaného HTTP přenosu.
 
-Práce s API, parsování obrázku a zobrazování na E-Ink je v souboru *code.py* (*code-v1.py* pro původní verzi s BMP), v souboru *mb_setup.py* je obecné nastavení periferií MakerBadge a několik pomocných funkcí. V souboru *settings.toml* se nastavuje připojení k WiFi.
+Práce s API, parsování obrázku a zobrazování na E-Ink je v souboru *code.py*, v souboru *mb_setup.py* je obecné nastavení periferií MakerBadge a několik pomocných funkcí. V souboru *settings.toml* se nastavuje připojení k WiFi.
 
 - MakerBadge: https://www.makermarket.cz/maker-badge/
 - Živý obraz: https://zivyobraz.eu/
